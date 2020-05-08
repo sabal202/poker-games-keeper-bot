@@ -14,7 +14,7 @@ telebot.logger.setLevel(logging.DEBUG)
 
 @bot.message_handler(commands=['poker_parse_results'])
 def parse_results(message):
-    
+    bot.reply_to(message, "принял")
     m = []
     for line in message.text.split('\\n'):
         name, p = line.split(",")
@@ -37,7 +37,7 @@ def parse_results(message):
             m[0] = (0, name0)
         m.sort()
     
-    bot.send_message(message.chat.id, '\n'.join(tol))
+    bot.reply_to(message, '\n'.join(tol))
 
 # @bot.message_handler(commands=['poker_start'])
 # def handle_poker_start(message):
