@@ -1,8 +1,9 @@
-import settings
 import telebot
 import logging
+import os
 
-bot = telebot.TeleBot(settings.TOKEN)
+TOKEN = os.environ['TIMES']
+bot = telebot.TeleBot(TOKEN)
 
 logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)
