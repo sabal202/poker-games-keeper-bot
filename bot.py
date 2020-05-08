@@ -16,7 +16,7 @@ telebot.logger.setLevel(logging.DEBUG)
 def parse_results(message):
     
     m = []
-    for line in message.split('\n'):
+    for line in message.text.split('\n'):
         name, p = input().split(",")
         p = float(p)
         m.append((p, name))
