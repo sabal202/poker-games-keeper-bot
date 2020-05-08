@@ -1,3 +1,5 @@
 settings.py
 *.db3
 *.csv
+.vscode
+__pycache__
