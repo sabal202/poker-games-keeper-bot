@@ -16,7 +16,7 @@ telebot.logger.setLevel(logging.DEBUG)
 def parse_results(message):
     
     m = []
-    for line in message.text.split('\n'):
+    for line in message.text.split('\\n'):
         name, p = line.split(",")
         p = float(p)
         m.append((p, name))
@@ -28,7 +28,7 @@ def parse_results(message):
         p1, name1 = m[-1]
         
         if abs(p0) >= p1:
-            print(name0, name1, p1)
+            tol.append(f'{name0} скидывает {name1} {p1}р')
             m[-1] = (0, name1)
             m[0] = (p0 + p1, name0)
         else:
