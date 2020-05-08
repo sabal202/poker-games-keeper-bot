@@ -12,8 +12,6 @@ bot = telebot.TeleBot(TOKEN)
 logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)
 
-people = pd.read_csv('people.csv')
-
 @bot.message_handler(commands=['poker_parse_results'])
 def parse_results(message):
     
