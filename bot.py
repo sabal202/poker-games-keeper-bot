@@ -17,7 +17,7 @@ def parse_results(message):
     
     m = []
     for line in message.text.split('\n'):
-        name, p = input().split(",")
+        name, p = line.split(",")
         p = float(p)
         m.append((p, name))
 
