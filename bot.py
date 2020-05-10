@@ -31,7 +31,7 @@ def fix_message(bot_instance, message):
     bot_instance.fixed_text = fix_text_escaping(message.text)
     
     admins = [admin.user.id for admin in bot.get_chat_administrators(message.chat.id)]
-    bot_instance.from_admin = message['from'].id in admins
+    bot_instance.from_admin = message.from_user.id in admins
 
 @bot.message_handler(commands=['poker_parse_results'])
 def parse_results(message):
