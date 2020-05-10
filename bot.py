@@ -11,9 +11,6 @@ import settings
 import database
 
 
-def fix_text_escaping(text):
-    return text #.encode('ISO 8859-1').decode('unicode_escape')
-
 def generate_message_from_transactions(transactions):
     transactions = ['{0} должен скинуть {2}р {1}'.format(*tr) for tr in transactions]
     return 'Кто, кому, сколько должен скинуть:\n' + '\n'.join(transactions)
@@ -28,8 +25,6 @@ apihelper.ENABLE_MIDDLEWARE = True
 
 @bot.middleware_handler(update_types=['message'])
 def fix_message(bot_instance, message):
-    bot_instance.fixed_text = fix_text_escaping(message.text)
-    
     bot_instance.is_from_chat = message.from_user.id != message.chat.id
     if bot_instance.is_from_chat:
         admins = [admin.user.id for admin in bot.get_chat_administrators(message.chat.id)]
@@ -46,7 +41,7 @@ def parse_results(message):
         bot.reply_to(message, 'Сообщение отправлено не в чате, поэтому вы не можете использовать эту функцию')
         return
 
-    lines = bot.fixed_text.split('\n')[1:]
+    lines = message.text.split('\n')[1:]
 
     if not lines:
         bot.reply_to(message, 'Вы не написали результатов')
@@ -92,7 +87,7 @@ def parse_results(message):
 
 @bot.message_handler(commands=['info'])
 def handle_poker_start(message):
-	bot.send_message(message.chat.id, "Я существую, чтобы упростить отслеживание результатов игр в покер")
+	bot.send_message(message.from_user.id, "Я существую, чтобы упростить отслеживание результатов игр в покер")
 
 # @bot.message_handler(commands=['poker_start'])
 # def handle_poker_start(message):
