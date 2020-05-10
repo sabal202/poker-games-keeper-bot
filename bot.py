@@ -12,7 +12,7 @@ import database
 
 
 def fix_text_escaping(text):
-    return text.encode('ISO 8859-1').decode('unicode_escape')
+    return text #.encode('ISO 8859-1').decode('unicode_escape')
 
 def generate_message_from_transactions(transactions):
     transactions = ['{0} должен скинуть {2}р {1}'.format(*tr) for tr in transactions]
