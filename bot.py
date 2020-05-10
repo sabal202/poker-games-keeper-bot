@@ -30,15 +30,22 @@ apihelper.ENABLE_MIDDLEWARE = True
 def fix_message(bot_instance, message):
     bot_instance.fixed_text = fix_text_escaping(message.text)
     
-    admins = [admin.user.id for admin in bot.get_chat_administrators(message.chat.id)]
-    bot_instance.from_admin = message.from_user.id in admins
+    bot_instance.is_from_chat = message.from_user.id != message.chat.id
+    if bot_instance.is_from_chat:
+        admins = [admin.user.id for admin in bot.get_chat_administrators(message.chat.id)]
+        bot_instance.is_from_admin = message.from_user.id in admins
+    else:
+        bot_instance.is_from_admin = False 
 
 @bot.message_handler(commands=['poker_parse_results'])
 def parse_results(message):
-    if not bot.from_admin:
-        bot.reply_to(message, 'Вы не администратор, поэтому не можете использовать эту функцию')
+    if bot.is_from_chat and not bot.is_from_admin:
+        bot.reply_to(message, 'Вы не администратор, поэтому вы не можете использовать эту функцию')
         return
-    
+    elif not bot.is_from_chat: # TODO изменить поведение
+        bot.reply_to(message, 'Сообщение отправлено не в чате, поэтому вы не можете использовать эту функцию')
+        return
+
     lines = bot.fixed_text.split('\n')[1:]
 
     if not lines:
@@ -50,7 +57,7 @@ def parse_results(message):
         try:
             splitter = line.rfind(' ')
             name, p = line[:splitter], line[splitter + 1:]
-            p = float(p)
+            p = int(p) # TODO может быть использовать дробные
             m.append((p, name))
         except Exception as err:
             bot.reply_to(message, f'Ошибка в {i} строчке результатов')
@@ -59,7 +66,7 @@ def parse_results(message):
     sum_of_results = sum([i[0] for i in m])
 
     if sum_of_results != 0:
-        bot.reply_to(message, 'Сумма результатов равна {sum_of_results}, а не 0')
+        bot.reply_to(message, f'Ошибка, сумма результатов равна {sum_of_results}, а не 0')
         return
 
     m.sort()
@@ -83,7 +90,7 @@ def parse_results(message):
     reply = generate_message_from_transactions(transactions)
     bot.reply_to(message, reply)
 
-@bot.message_handler(commands=['help'])
+@bot.message_handler(commands=['info'])
 def handle_poker_start(message):
 	bot.send_message(message.chat.id, "Я существую, чтобы упростить отслеживание результатов игр в покер")
 
