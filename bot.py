@@ -39,7 +39,7 @@ def parse_results(message):
         bot.reply_to(message, 'Вы не администратор, поэтому не можете использовать эту функцию')
         return
     
-    lines = message.fixed_text.split('\n')[1:]
+    lines = bot.fixed_text.split('\n')[1:]
 
     if not lines:
         bot.reply_to(message, 'Вы не написали результатов')
