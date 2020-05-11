@@ -16,7 +16,10 @@ def generate_message_from_transactions(transactions):
     return 'Кто, кому, сколько должен скинуть:\n' + '\n'.join(transactions)
 
 bot = telebot.TeleBot(settings.TOKEN)
-db_helper = database.MongoDBHelper(settings.PROD_MONGODB)
+
+
+db_name = 'test' if settings.TEST else 'db'
+db_helper = database.MongoDBHelper(settings.PROD_MONGODB, db_name)
 
 logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)

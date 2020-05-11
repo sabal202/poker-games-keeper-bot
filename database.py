@@ -2,9 +2,9 @@ import pymongo
 
 
 class MongoDBHelper:
-    def __init__(self, uri):
+    def __init__(self, uri, db_name):
         self.client = pymongo.MongoClient(uri)
-        self.db = self.client.db
+        self.db = self.client[db_name]
 
     def add_or_update_player(self, **kwargs):
         coll = self.db.players
