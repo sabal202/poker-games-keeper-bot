@@ -101,7 +101,7 @@ def handle_poker_start(message):
 @bot.message_handler(commands=['send_nudes'])
 def handle_poker_start(message):
     with open('photos.txt', mode='r', encoding='utf8') as file:
-        urls = [i.rename('\n', '') for i in file.readlines()]
+        urls = [i.replace('\n', '') for i in file.readlines()]
         
     url = random.choice(urls)
     f = open('out.jpg','wb')
