@@ -66,7 +66,7 @@ def fix_message(bot_instance, message):
     else:
         bot_instance.is_from_admin = False
 
-    if message.text.startswith('/poker'):
+    if message.content_type == 'text' and message.text.startswith('/poker'):
         if bot.is_from_chat and not bot.is_from_admin:
             bot.reply_to(message, strings['not_admin'])
             return
@@ -144,7 +144,7 @@ def handle_poker_start(message):
     players = ger_player_nums_from_text(message.text)
 
     bot.reply_to(message, json.dumps(players, indent=4))
-    
+
     # TODO: DB
 
 
