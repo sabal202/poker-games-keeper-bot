@@ -33,7 +33,7 @@ def ger_player_nums_from_text(text: str) -> dict:
         num = match.group(3)
         if not num:
             num = 95
-        players[name] = num
+        players[name] = int(num)
 
     return players
 
@@ -195,7 +195,7 @@ def handle_poker_undo(message):
 
 @bot.message_handler(content_types=['dice'])
 def handle_poker_undo(message):
-    bot.reply_to(message, 'Gotted')
-    bot.reply_to(message, f'Gotted {message.dice.value}')
+    if message.dice.value == 6:
+        bot.send_message(message.chat.id, strings['you_are_lucky'])
 
 bot.polling(none_stop=True, interval=0, timeout=20)
