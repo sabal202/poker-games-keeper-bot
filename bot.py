@@ -209,7 +209,7 @@ def handle_poker_end(message: Message):
     cash_in_game = 0
     player_cash_status_in_game = {}
     player_cash_delta = {}
-    events.sort(key=lambda x: x['date'])
+    # events.sort(key=lambda x: x['date'])
     for event in events:
         username = event['username']
         if username not in player_cash_status_in_game:
@@ -365,7 +365,7 @@ def handle_poker_event(message: Message):
 @bot.message_handler(commands=['poker_undo'])
 def handle_poker_undo(message: Message):
     event = db_helper.undo_event(message.chat_id)
-    bot.send_message(message.from_user.id, json.dumps(event, indent=4))
+    bot.send_message(message.from_user.id, f"Стер {event['date']} {event['username']} {event['type']} {event['num']}")
 
 
 @bot.message_handler(commands=['poker_clear_events'])
