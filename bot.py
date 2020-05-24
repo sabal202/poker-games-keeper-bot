@@ -98,7 +98,7 @@ def fix_message(bot_instance, message: Message):
             bot.reply_to(message, strings['not_in_chat'])
             return
 
-        chat_id = bot_instance.chat.id
+        chat_id = message.chat.id
         result_chat_id = re.search(regex_chat_id, message.text, re.MULTILINE)
         if result_chat_id:
             chat_id = int(regex_chat_id.group(1))
