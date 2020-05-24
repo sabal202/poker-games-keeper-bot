@@ -68,14 +68,14 @@ class MongoDBHelper:
         return self.db.players.find_one({'username': username})
 
     def get_chat_ids(self):
-        chats_ids = list({game.chat_id for game in self.db.games.find()})
+        chats_ids = list({game['chat_id'] for game in self.db.games.find()})
         return chats_ids
 
     def get_all_events(self, chat_id):
         current_game = self.get_current_game(chat_id)
         events = []
         if current_game is not None:
-            return current_game.events
+            return current_game['events']
         else:
             raise ValueError('Игра не найдена')
     
@@ -83,7 +83,7 @@ class MongoDBHelper:
         current_game = self.get_current_game(chat_id)
         events = []
         if current_game is not None:
-            return datetime.datetime.fromisoformat(current_game.start)
+            return datetime.datetime.fromisoformat(current_game['start'])
         else:
             raise ValueError('Игра не найдена')
 

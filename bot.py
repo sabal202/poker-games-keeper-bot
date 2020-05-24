@@ -335,7 +335,7 @@ def handle_poker_event(message: Message):
     wrote = [strings['wrote_to_db']]
     
     for player, num in players.items():
-        wrote.append(f'{player} {num}')
+        wrote.append(f'{player} {type_} {num}')
         event = dict(
             date=date,
             username=player,
