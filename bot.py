@@ -254,7 +254,7 @@ def handle_poker_end(message: Message):
 
 
     sum_cash_results = sum(player_cash_delta.values())
-    if sum_cash_results != 0 or cash_in_game_with_end:
+    if sum_cash_results != 0:
         errors.append(strings['error_sum_of_results'].format(sum_cash_results))
 
     if errors:
