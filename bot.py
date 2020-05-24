@@ -323,10 +323,10 @@ def handle_poker_event(message: Message):
     date = get_datetime_from_text_or_current(message)
     type_ = message.text.split()[0].split('@')[0][7:]
     default_num_from_type = {
-        'poker_add': DEFAULTS.NUM_ON_ADD, 
-        'poker_minus': DEFAULTS.NUM_ON_MINUS, 
-        'poker_out': DEFAULTS.NUM_ON_OUT, 
-        'poker_in': DEFAULTS.NUM_ON_IN
+        'add': DEFAULTS.NUM_ON_ADD, 
+        'minus': DEFAULTS.NUM_ON_MINUS, 
+        'out': DEFAULTS.NUM_ON_OUT, 
+        'in': DEFAULTS.NUM_ON_IN
     }
     players = ger_player_nums_from_text(message.text, default_num_from_type[type_])
 

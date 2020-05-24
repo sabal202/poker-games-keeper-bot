@@ -14,7 +14,7 @@ class MongoDBHelper:
         if current_game is None:
             self.db.games.insert_one(game)
         else:
-            raise ValueError('Игра не найдена')
+            raise ValueError('Существует незавершенная игра')
 
     def add_event_to_game(self, chat_id, event):
         current_game = self.get_current_game(chat_id)
