@@ -20,7 +20,7 @@ strings = {
     'result_body': '{} {}',
     'endgame_title': 'Игра от {date} длилась {timedelta} ({start_time}-{end_time})',
     'timedelta': '{days} {hours:02d}:{minutes:02d}',
-    'endgame_podtitle': 'Участвовало игроков {n_players}, их результаты:',
+    'endgame_podtitle': 'Участвовало {n_players} игроков, их результаты:',
     'endgame_body': 'Игрок {: <16} ушел с {}',
     'endgame_footer': 'Отличная игра!',
 }

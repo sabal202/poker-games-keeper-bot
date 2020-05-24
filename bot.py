@@ -46,7 +46,8 @@ def get_datetime_from_text_or_current(message: Message) -> datetime.datetime:
     result_datetime = re.search(regex_datetime, message.text, re.MULTILINE)
     if result_datetime:
         date = datetime.datetime.fromisoformat(result_datetime.group(0))
-    return date
+    # TODO: fix time 
+    return date + relativedelta(hours=3)
 
 
 def ger_player_nums_from_text(text: str, default_num: int) -> Dict[str, int]:
@@ -67,7 +68,7 @@ regex_datetime = r"(([12]\d{3})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]) ([01]\d}|2
 regex_players = r"(?<=\W)(@\w+)[\s,:;]*([-+]?\d+|)"
 regex_chat_id = r"^\/[\w@]+\s+(-?\d+)[\s\$]"
 datetimeformat = '%Y-%m-%d %H:%M:%S' 
-timeformat = '%H:%M:%S' 
+timeformat = '%H:%M' 
 dateformat = '%Y-%m-%d'
 
 bot = telebot.TeleBot(settings.TOKEN)
@@ -232,6 +233,7 @@ def handle_poker_end(message: Message):
             cash_in_game -= num
         elif type_ == 'out':
             player_cash_status_in_game[username] = num
+            # TODO: fix line below when double out
             player_cash_delta[username] = num - player_cash_delta[username]
             cash_in_game -= num
             players_in_game.difference_update({username})
@@ -297,6 +299,8 @@ def handle_poker_end(message: Message):
     r_d = relativedelta(date, start_date)
     if r_d.days % 10 == 1:
         days = f'{r_d.days} сутки'
+    elif r_d.days == 0:
+        days = ''
     else:
         days = f'{r_d.days} суток'
     timedelta = strings['timedelta'].format(days=days, hours=r_d.hours, minutes=r_d.minutes)
@@ -309,9 +313,12 @@ def handle_poker_end(message: Message):
             end_time=date.strftime(timeformat)),
         strings['endgame_podtitle'].format(
             n_players=len(player_cash_delta_with_end)
-        ),
-        strings['endgame_footer']
+        )
     ]
+    for player, delta in player_cash_delta_with_end.items():
+        lines.append(strings['endgame_body'].format(player, delta))
+
+    lines.append(strings['endgame_footer'])
 
     bot.send_message(message.chat.id, '\n'.join(lines))
 
