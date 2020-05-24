@@ -213,22 +213,23 @@ def handle_poker_end(message: Message):
         if username not in player_cash_status_in_game:
             player_cash_status_in_game[username] = 0
             player_cash_delta[username] = 0
-
+            
+        type_ = event['type']
         # TODO: check for errors in events
-        if type == 'in':
+        if type_ == 'in':
             player_cash_status_in_game[username] += num
             player_cash_delta[username] -= num
             cash_in_game += num
             players_in_game.add(username)
-        elif type == 'add':
+        elif type_ == 'add':
             player_cash_status_in_game[username] += num
             player_cash_delta[username] -= num
             cash_in_game += num
-        elif type == 'minus':
+        elif type_ == 'minus':
             player_cash_status_in_game[username] -= num
             player_cash_delta[username] += num
             cash_in_game -= num
-        elif type == 'out':
+        elif type_ == 'out':
             player_cash_status_in_game[username] = num
             player_cash_delta[username] += num
             cash_in_game -= num
@@ -238,8 +239,9 @@ def handle_poker_end(message: Message):
     for player in players:
         if player not in player_cash_status_in_game or player not in players_in_game:
             errors.append(strings['player_not_in_game'].format(player))
-            bot.send_message(message.chat.id, json.dumps(player_cash_status_in_game, indent=4))
-            bot.send_message(message.chat.id, json.dumps(players, indent=4))
+    bot.send_message(message.from_user.id, json.dumps(player_cash_status_in_game, indent=4))
+    bot.send_message(message.from_user.id, json.dumps(players, indent=4))
+    bot.send_message(message.from_user.id, str(players_in_game))
 
     players_lasts_in_game = players_in_game.difference(set(players.keys()))
     if players_lasts_in_game:
