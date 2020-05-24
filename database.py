@@ -20,7 +20,7 @@ class MongoDBHelper:
         current_game = self.get_current_game(chat_id)
         if current_game is not None:
             self.db.games.update_one(
-                {'_id': current_game._id}, 
+                {'_id': current_game['_id']}, 
                 {'$push': {'events': event}}
             )
         else:
@@ -31,7 +31,7 @@ class MongoDBHelper:
         if current_game is not None:
             last_element = current_game['events'][-1]
             self.db.games.update_one(
-                {'_id': current_game._id}, 
+                {'_id': current_game['_id']}, 
                 {'$pop': {'events': 1}}
             )
             return last_element
@@ -42,7 +42,7 @@ class MongoDBHelper:
         current_game = self.get_current_game(chat_id)
         if current_game is not None:
             self.db.games.update_one(
-                {'_id': current_game._id}, 
+                {'_id': current_game['_id']}, 
                 {'$set': {'status': 0, 'results': results, 'end': date}}
             )
         else:
