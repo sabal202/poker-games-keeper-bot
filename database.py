@@ -9,6 +9,7 @@ class MongoDBHelper:
         self.db = self.client[db_name]
 
     def add_game(self, chat_id, game):
+        game['chat_id'] = chat_id
         current_game = self.get_current_game(chat_id)
         if current_game is None:
             self.db.games.insert_one(game)
