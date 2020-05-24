@@ -103,6 +103,9 @@ def fix_message(bot_instance, message: Message):
         if result_chat_id:
             chat_id = int(regex_chat_id.group(1))
 
+        if settings.DEBUG:
+            chat_id = settings.DEBUG_CHAT_ID
+
         message.chat_id = chat_id
 
 
