@@ -213,8 +213,9 @@ def handle_poker_end(message: Message):
         if username not in player_cash_status_in_game:
             player_cash_status_in_game[username] = 0
             player_cash_delta[username] = 0
-            
+
         type_ = event['type']
+        num = event['num']
         # TODO: check for errors in events
         if type_ == 'in':
             player_cash_status_in_game[username] += num
