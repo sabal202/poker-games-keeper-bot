@@ -9,14 +9,14 @@ class MongoDBHelper:
         self.db = self.client[db_name]
 
     def add_game(self, chat_id, game):
-        current_game = get_current_game(chat_id)
+        current_game = self.get_current_game(chat_id)
         if current_game is None:
             self.db.games.insert_one(game)
         else:
             raise ValueError('Игра не найдена')
 
     def add_event_to_game(self, chat_id, event):
-        current_game = get_current_game(chat_id)
+        current_game = self.get_current_game(chat_id)
         if current_game is not None:
             self.db.games.update_one(
                 {'_id': current_game._id}, 
@@ -26,7 +26,7 @@ class MongoDBHelper:
             raise ValueError('Игра не найдена')
 
     def undo_event(self, chat_id):
-        current_game = get_current_game(chat_id)
+        current_game = self.get_current_game(chat_id)
         if current_game is not None:
             last_element = current_game['events'][-1]
             self.db.games.update_one(
@@ -38,7 +38,7 @@ class MongoDBHelper:
             raise ValueError('Игра не найдена')
 
     def end_game(self, chat_id, results, date):
-        current_game = get_current_game(chat_id)
+        current_game = self.get_current_game(chat_id)
         if current_game is not None:
             self.db.games.update_one(
                 {'_id': current_game._id}, 
@@ -61,7 +61,7 @@ class MongoDBHelper:
         return chats_ids
 
     def get_all_events(self, chat_id):
-        current_game = get_current_game(chat_id)
+        current_game = self.get_current_game(chat_id)
         events = []
         if current_game is not None:
             return current_game.events
@@ -69,7 +69,7 @@ class MongoDBHelper:
             raise ValueError('Игра не найдена')
     
     def get_start_time(self, chat_id) -> datetime.datetime:
-        current_game = get_current_game(chat_id)
+        current_game = self.get_current_game(chat_id)
         events = []
         if current_game is not None:
             return datetime.datetime.fromisoformat(current_game.start)
