@@ -64,7 +64,7 @@ def ger_player_nums_from_text(text: str, default_num: int) -> Dict[str, int]:
 
 
 regex_datetime = r"(([12]\d{3})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]) ([01]\d}|2[0-3])(:([0-5]\d)){1,2})"
-regex_players = r"(?<=\W)(@\w+)[\s,:;]+([-+]?\d+|)"
+regex_players = r"(?<=\W)(@\w+)[\s,:;]*([-+]?\d+|)"
 regex_chat_id = r"^\/[\w@]+\s+(-?\d+)[\s\$]"
 datetimeformat = '%Y-%m-%d %H:%M:%S' 
 timeformat = '%H:%M:%S' 
