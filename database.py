@@ -16,12 +16,11 @@ class MongoDBHelper:
         else:
             raise ValueError('Существует незавершенная игра')
 
-    def delete_game(self, chat_id, event):
+    def delete_game(self, chat_id,):
         current_game = self.get_current_game(chat_id)
         if current_game is not None:
             self.db.games.delete_one(
-                {'_id': current_game['_id']}, 
-                {'$push': {'events': event}}
+                {'_id': current_game['_id']}
             )
         else:
             raise ValueError('Игра не найдена')

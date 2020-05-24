@@ -219,20 +219,20 @@ def handle_poker_end(message: Message):
         # TODO: check for errors in events
         if type_ == 'in':
             player_cash_status_in_game[username] += num
-            player_cash_delta[username] -= num
+            player_cash_delta[username] += num
             cash_in_game += num
             players_in_game.add(username)
         elif type_ == 'add':
             player_cash_status_in_game[username] += num
-            player_cash_delta[username] -= num
+            player_cash_delta[username] += num
             cash_in_game += num
         elif type_ == 'minus':
             player_cash_status_in_game[username] -= num
-            player_cash_delta[username] += num
+            player_cash_delta[username] -= num
             cash_in_game -= num
         elif type_ == 'out':
             player_cash_status_in_game[username] = num
-            player_cash_delta[username] += num
+            player_cash_delta[username] = num - player_cash_delta[username]
             cash_in_game -= num
             players_in_game.difference_update({username})
 
@@ -254,7 +254,7 @@ def handle_poker_end(message: Message):
     player_cash_delta_with_end = player_cash_delta.copy()
     for player, num in players.items():
         player_cash_status_with_end[player] = num
-        player_cash_delta_with_end[player] -= num
+        player_cash_delta_with_end[player] = num - player_cash_delta_with_end[player]
         cash_in_game_with_end -= num
 
 
