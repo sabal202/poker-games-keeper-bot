@@ -238,6 +238,8 @@ def handle_poker_end(message: Message):
     for player in players:
         if player not in player_cash_status_in_game or player not in players_in_game:
             errors.append(strings['player_not_in_game'].format(player))
+            bot.send_message(message.chat.id, json.dumps(player_cash_status_in_game, indent=4))
+            bot.send_message(message.chat.id, json.dumps(players, indent=4))
 
     players_lasts_in_game = players_in_game.difference(set(players.keys()))
     if players_lasts_in_game:

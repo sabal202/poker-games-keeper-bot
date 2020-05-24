@@ -17,7 +17,7 @@ strings = {
     'wrote_to_db': 'Записал в БД:',
     'pre_results': 'На текущий момент результаты такие:',
     'pre_results_with_end': 'И вместе с вашими итогами:',
-    'result_body': 'Игрок {} {}',
+    'result_body': '{} {}',
     'endgame_title': 'Игра от {date} длилась {timedelta} ({start_time}-{end_time})',
     'timedelta': '{days} {hours:02d}:{minutes:02d}',
     'endgame_podtitle': 'Участвовало игроков {n_players}, их результаты:',
