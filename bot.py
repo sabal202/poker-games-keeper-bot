@@ -254,7 +254,7 @@ def handle_poker_end(message: Message):
     player_cash_delta_with_end = player_cash_delta.copy()
     for player, num in players.items():
         player_cash_status_with_end[player] = num
-        player_cash_delta_with_end[player] += num
+        player_cash_delta_with_end[player] -= num
         cash_in_game_with_end -= num
 
 
