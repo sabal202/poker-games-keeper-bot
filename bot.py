@@ -36,10 +36,10 @@ class DEFAULTS:
 
 
 def get_datetime_from_text_or_current(message: Message) -> datetime.datetime:
-    date = datetime.datetime.fromtimestamp(int(message.date))
+    date = datetime.datetime.fromtimestamp(int(message.date)) + relativedelta(hours=3)
     
     try:
-        date = datetime.datetime.fromtimestamp(int(message.forward_date))
+        date = datetime.datetime.fromtimestamp(int(message.forward_date)) + relativedelta(hours=3)
     except Exception:
         pass
 
@@ -47,7 +47,7 @@ def get_datetime_from_text_or_current(message: Message) -> datetime.datetime:
     if result_datetime:
         date = datetime.datetime.fromisoformat(result_datetime.group(0))
     # TODO: fix time 
-    return date + relativedelta(hours=3)
+    return date
 
 
 def ger_player_nums_from_text(text: str, default_num: int) -> Dict[str, int]:
