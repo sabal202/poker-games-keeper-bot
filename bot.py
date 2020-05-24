@@ -183,16 +183,18 @@ def handle_poker_start(message: Message):
         events=[],
         results=[]
     )
-
-    db_helper.add_game(message.chat_id, game)
-    for player, num in players.items():
-        event = dict(
-            date=date,
-            username=player,
-            type='in',
-            num=num
-        )
-        db_helper.add_event_to_game(message.chat_id, event)
+    try:
+        db_helper.add_game(message.chat_id, game)
+        for player, num in players.items():
+            event = dict(
+                date=date,
+                username=player,
+                type='in',
+                num=num
+            )
+            db_helper.add_event_to_game(message.chat_id, event)
+    except ValueError as err:
+        bot.send_message(message.chat.id, 'Существует незавершенная игра')
 
 
 @bot.message_handler(commands=['poker_end'])
@@ -357,6 +359,11 @@ def handle_poker_clear_events(message: Message):
     db_helper.poker_clear_events(message.chat_id)
     bot.send_message(message.from_user.id, strings['cleared_events'])
 
+
+@bot.message_handler(commands=['poker_delete_current_game'])
+def handle_poker_delete_current_game(message: Message):
+    db_helper.delete_game(message.chat_id)
+    bot.send_message(message.from_user.id, strings['deleted_game'])
 
 
 @bot.message_handler(commands=['poker_plot'])
