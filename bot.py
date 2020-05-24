@@ -64,7 +64,7 @@ def ger_player_nums_from_text(text: str, default_num: int) -> Dict[str, int]:
     return players
 
 
-regex_datetime = r"(([12]\d{3})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]) ([01]\d}|2[0-3])(:([0-5]\d)){1,2})"
+regex_datetime = r"(([12]\d{3})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]) ([01]\d|2[0-3])(:([0-5]\d)){1,2})"
 regex_players = r"(?<=\W)(@\w+)[\s,:;]*([-+]?\d+|)"
 regex_chat_id = r"^\/[\w@]+\s+(-?\d+)[\s\$]"
 datetimeformat = '%Y-%m-%d %H:%M:%S' 
@@ -209,6 +209,7 @@ def handle_poker_end(message: Message):
     cash_in_game = 0
     player_cash_status_in_game = {}
     player_cash_delta = {}
+    events.sort(key=lambda x: x['date'])
     for event in events:
         username = event['username']
         if username not in player_cash_status_in_game:
