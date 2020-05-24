@@ -209,29 +209,30 @@ def handle_poker_end(message: Message):
     player_cash_status_in_game = {}
     player_cash_delta = {}
     for event in events:
-        if event.username not in player_cash_status_in_game:
-            player_cash_status_in_game[event.username] = 0
-            player_cash_delta[event.username] = 0
+        username = event['username']
+        if username not in player_cash_status_in_game:
+            player_cash_status_in_game[username] = 0
+            player_cash_delta[username] = 0
 
         # TODO: check for errors in events
-        if event.type == 'in':
-            player_cash_status_in_game[event.username] += event.num
-            player_cash_delta[event.username] -= event.num
-            cash_in_game += event.num
-            players_in_game.add(event.username)
-        elif event.type == 'add':
-            player_cash_status_in_game[event.username] += event.num
-            player_cash_delta[event.username] -= event.num
-            cash_in_game += event.num
-        elif event.type == 'minus':
-            player_cash_status_in_game[event.username] -= event.num
-            player_cash_delta[event.username] += event.num
-            cash_in_game -= event.num
-        elif event.type == 'out':
-            player_cash_status_in_game[event.username] = event.num
-            player_cash_delta[event.username] += event.num
-            cash_in_game -= event.num
-            players_in_game.difference_update({event.username})
+        if type == 'in':
+            player_cash_status_in_game[username] += num
+            player_cash_delta[username] -= num
+            cash_in_game += num
+            players_in_game.add(username)
+        elif type == 'add':
+            player_cash_status_in_game[username] += num
+            player_cash_delta[username] -= num
+            cash_in_game += num
+        elif type == 'minus':
+            player_cash_status_in_game[username] -= num
+            player_cash_delta[username] += num
+            cash_in_game -= num
+        elif type == 'out':
+            player_cash_status_in_game[username] = num
+            player_cash_delta[username] += num
+            cash_in_game -= num
+            players_in_game.difference_update({username})
 
     errors = []
     for player in players:
