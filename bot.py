@@ -5,10 +5,14 @@ import os
 import random
 import re
 import urllib
+from typing import Dict, List, Set
 
+import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 import pymongo
 import telebot
+from dateutil.relativedelta import relativedelta
 from telebot import apihelper
 from telebot.types import Chat, ChatMember, Dice, Message
 
@@ -17,34 +21,54 @@ import settings
 from strings import strings
 
 
-def get_datetime_from_text_or_current(message) -> datetime.datetime:
+class STATES:
+    IDLE = 0
+    INGAME = 1
+
+
+class DEFAULTS:
+    NUM_ON_START = 95
+    NUM_ON_IN = 95
+    NUM_ON_ADD = 95
+    NUM_ON_MINUS = 95
+    NUM_ON_OUT = 0
+    NUM_ON_END = 0
+
+
+def get_datetime_from_text_or_current(message: Message) -> datetime.datetime:
     date = datetime.datetime.fromtimestamp(int(message.date))
+    
+    try:
+        date = datetime.datetime.fromtimestamp(int(message.forward_date))
+    except Exception:
+        pass
+
     result_datetime = re.search(regex_datetime, message.text, re.MULTILINE)
     if result_datetime:
         date = datetime.datetime.fromisoformat(result_datetime.group(0))
     return date
 
 
-def ger_player_nums_from_text(text: str) -> dict:
+def ger_player_nums_from_text(text: str, default_num: int) -> Dict[str, int]:
     matches_players = re.finditer(regex_players, text, re.MULTILINE)
     players = {}
     for match in matches_players:
         name = match.group(1)
-        num = match.group(3)
+        num = match.group(2)
         if not num:
-            num = 95
-        players[name] = int(num)
-
+            num = default_num
+        else:
+            num = int(num)
+        players[name] = num
     return players
 
 
-def generate_message_from_transactions(transactions) -> str:
-    transactions = ['{0} должен скинуть {2}р {1}'.format(
-        *tr) for tr in transactions]
-    return 'Кто, кому, сколько должен скинуть:\n' + '\n'.join(transactions)
-
 regex_datetime = r"(([12]\d{3})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]) ([01]\d}|2[0-3])(:([0-5]\d)){1,2})"
-regex_players = r"(@\w+)([\s,:;|\\/]+|$)([-+]?\d+|)"
+regex_players = r"(?<=\W)(@\w+)[\s,:;]+([-+]?\d+|)"
+regex_chat_id = r"^\/[\w@]+\s+(-?\d+)[\s\$]"
+datetimeformat = '%Y-%m-%d %H:%M:%S' 
+timeformat = '%H:%M:%S' 
+dateformat = '%Y-%m-%d'
 
 bot = telebot.TeleBot(settings.TOKEN)
 
@@ -57,7 +81,7 @@ apihelper.ENABLE_MIDDLEWARE = True
 
 
 @bot.middleware_handler(update_types=['message'])
-def fix_message(bot_instance, message):
+def fix_message(bot_instance, message: Message):
     bot_instance.is_from_chat = message.from_user.id != message.chat.id
     if bot_instance.is_from_chat:
         chat_administrators = bot.get_chat_administrators(message.chat.id)
@@ -74,29 +98,26 @@ def fix_message(bot_instance, message):
             bot.reply_to(message, strings['not_in_chat'])
             return
 
-def parse_results(message):
-    lines = message.text.split('\n')[1:]
+        chat_id = bot_instance.chat.id
+        result_chat_id = re.search(regex_chat_id, message.text, re.MULTILINE)
+        if result_chat_id:
+            chat_id = int(regex_chat_id.group(1))
 
-    if not lines:
-        bot.reply_to(message, strings['error_noresults'])
-        return
+        message.chat_id = chat_id
+
+
+def parse_results(results: Dict[str, int]) -> List[str]:
+    if not results:
+        return [strings['error_noresults']]
 
     m = []
-    for i, line in enumerate(lines, 1):
-        try:
-            splitter = line.rfind(' ')
-            name, p = line[:splitter], line[splitter + 1:]
-            p = int(p)  # TODO может быть использовать дробные
-            m.append((p, name))
-        except Exception as err:
-            bot.reply_to(message, strings['error_ith_line'].format(i))
-            return
+    for name, num in results.items():
+        m.append((num, name))
 
     sum_of_results = sum([i[0] for i in m])
 
     if sum_of_results != 0:
-        bot.reply_to(message, strings['error_sum_of_results'].format(sum_of_results))
-        return
+        return [strings['error_sum_of_results'].format(sum_of_results)]
 
     m.sort()
     transactions = []
@@ -115,18 +136,20 @@ def parse_results(message):
         m.sort()
 
     transactions.sort()
-
-    reply = generate_message_from_transactions(transactions)
-    bot.reply_to(message, reply)
+    generated_lines = [
+        strings['transactions_body'].format(*tr)
+        for tr in transactions
+    ]
+    return [strings['transactions_title']] + generated_lines
 
 
 @bot.message_handler(commands=['info'])
-def handle_poker_start(message):
+def handle_info(message: Message):
     bot.send_message(message.from_user.id, strings['info'])
 
 
 @bot.message_handler(commands=['send_nudes'])
-def handle_poker_start(message):
+def handle_send_nudes(message: Message):
     with open('photos.txt', mode='r', encoding='utf8') as file:
         urls = [i.replace('\n', '') for i in file.readlines()]
 
@@ -138,63 +161,208 @@ def handle_poker_start(message):
     bot.send_photo(message.chat.id, img)
 
 
+@bot.message_handler(commands=['status'])
+def handle_status(message: Message):
+    pass
+
+
 @bot.message_handler(commands=['poker_start'])
-def handle_poker_start(message):
+def handle_poker_start(message: Message):
     date = get_datetime_from_text_or_current(message)
-    players = ger_player_nums_from_text(message.text)
+    players = ger_player_nums_from_text(message.text, DEFAULTS.NUM_ON_START)
+    
+    game = dict(
+        name=date.strftime(dateformat),
+        type='cash',
+        status=STATES.INGAME,
+        start=date.strftime(datetimeformat),
+        end='',
+        events=[],
+        results=[]
+    )
 
-    bot.reply_to(message, json.dumps(players, indent=4))
-
-    # TODO: DB
+    db_helper.add_game(message.chat_id, game)
+    for player, num in players.items():
+        event = dict(
+            date=date,
+            username=player,
+            type='in',
+            num=num
+        )
+        db_helper.add_event_to_game(message.chat_id, event)
 
 
 @bot.message_handler(commands=['poker_end'])
-def handle_poker_end(message):
+def handle_poker_end(message: Message):
     date = get_datetime_from_text_or_current(message)
-    players = ger_player_nums_from_text(message.text)
+    players = ger_player_nums_from_text(message.text, DEFAULTS.NUM_ON_END)
 
-    bot.reply_to(message, json.dumps(players, indent=4))
+    events = db_helper.get_all_events(message.chat_id)
 
-    # TODO: DB
+    players_in_game = set()
+    cash_in_game = 0
+    player_cash_status_in_game = {}
+    player_cash_delta = {}
+    for event in events:
+        if event.username not in player_cash_status_in_game:
+            player_cash_status_in_game[event.username] = 0
+            player_cash_delta[event.username] = 0
+
+        # TODO: check for errors in events
+        if event.type == 'in':
+            player_cash_status_in_game[event.username] += event.num
+            player_cash_delta[event.username] -= event.num
+            cash_in_game += event.num
+            players_in_game.add(event.username)
+        elif event.type == 'add':
+            player_cash_status_in_game[event.username] += event.num
+            player_cash_delta[event.username] -= event.num
+            cash_in_game += event.num
+        elif event.type == 'minus':
+            player_cash_status_in_game[event.username] -= event.num
+            player_cash_delta[event.username] += event.num
+            cash_in_game -= event.num
+        elif event.type == 'out':
+            player_cash_status_in_game[event.username] = event.num
+            player_cash_delta[event.username] += event.num
+            cash_in_game -= event.num
+            players_in_game.difference_update({event.username})
+
+    errors = []
+    for player in players:
+        if player not in player_cash_status_in_game or player not in players_in_game:
+            errors.append(strings['player_not_in_game'].format(player))
+
+    players_lasts_in_game = players_in_game.difference(set(players.keys()))
+    if players_lasts_in_game:
+        errors.append(strings['not_enough_players_out'].format(', '.join(players_lasts_in_game)))
+        
+
+    cash_in_game_with_end = cash_in_game
+    player_cash_status_with_end = player_cash_status_in_game.copy()
+    player_cash_delta_with_end = player_cash_delta.copy()
+    for player, num in players.items():
+        player_cash_status_with_end[player] = num
+        player_cash_delta_with_end[player] += num
+        cash_in_game_with_end -= num
 
 
-@bot.message_handler(commands=['poker_results'])
-def handle_poker_results(message):
-    if bot.is_from_chat and not bot.is_from_admin:
-        bot.reply_to(message, strings['not_admin'])
+    sum_cash_results = sum(player_cash_delta.values())
+    if sum_cash_results != 0 or cash_in_game_with_end:
+        errors.append(strings['error_sum_of_results'].format(sum_cash_results))
+
+    if errors:
+        errors.insert(0, strings['got_errors_title'])
+        errors.append(strings['got_errors_footer'])
+        errors.append('')
+        errors.append(strings['pre_results'])
+
+        for player, delta in player_cash_delta.items():
+            errors.append(strings['result_body'].format(player, delta))
+
+        errors.append('')
+        errors.append(strings['pre_results_with_end'])
+        for player, delta in player_cash_delta_with_end.items():
+            errors.append(strings['result_body'].format(player, delta))
+
+        reply = '\n'.join(errors)
+        bot.send_message(message.chat.id, reply)
         return
-    elif not bot.is_from_chat:  # TODO изменить поведение
-        bot.reply_to(message, strings['not_in_chat'])
-        return
 
-    parse_results(message.text)
+    # if all ok
+    for player, num in players.items():
+        event = dict(
+            date=date,
+            username=player,
+            type='out',
+            num=num
+        )
+        db_helper.add_event_to_game(message.chat_id, event)
+    
+    start_date = db_helper.get_start_time(message.chat_id)
+
+    db_helper.end_game(message.chat_id, results=player_cash_delta_with_end, date=date)
+
+    r_d = relativedelta(date, start_date)
+    if r_d.days % 10 == 1:
+        days = f'{r_d.days} сутки'
+    else:
+        days = f'{r_d.days} суток'
+    timedelta = strings['timedelta'].format(days=days, hours=r_d.hours, minutes=r_d.minutes)
+
+    lines = [
+        strings['endgame_title'].format(
+            date=start_date.strftime(dateformat), 
+            timedelta=timedelta, 
+            start_time=start_date.strftime(timeformat),
+            end_time=date.strftime(timeformat)),
+        strings['endgame_podtitle'].format(
+            n_players=len(player_cash_delta_with_end)
+        ),
+        strings['endgame_footer']
+    ]
+
+    bot.send_message(message.chat.id, '\n'.join(lines))
+
+    lines_transactions = parse_results(player_cash_delta_with_end)
+    bot.send_message(message.chat.id, '\n'.join(lines_transactions))
+
+@bot.message_handler(commands=['poker_parse_results'])
+def handle_poker_parse_results(message: Message):
+    results = ger_player_nums_from_text(message.text, DEFAULTS.NUM_ON_END)
+    lines = parse_results(results)
+    reply = '\n'.join(lines)
+    bot.reply_to(message, reply)
 
 
-@bot.message_handler(commands=['poker_in'])
-def handle_poker_event(message):
-    # TODO: DB
-    pass
+@bot.message_handler(commands=['poker_add', 'poker_minus', 'poker_out', 'poker_in'])
+def handle_poker_event(message: Message):
+    date = get_datetime_from_text_or_current(message)
+    type_ = message.text.split()[0].split('@')[0][7:]
+    default_num_from_type = {
+        'poker_add': DEFAULTS.NUM_ON_ADD, 
+        'poker_minus': DEFAULTS.NUM_ON_MINUS, 
+        'poker_out': DEFAULTS.NUM_ON_OUT, 
+        'poker_in': DEFAULTS.NUM_ON_IN
+    }
+    players = ger_player_nums_from_text(message.text, default_num_from_type[type_])
 
+    wrote = [strings['wrote_to_db']]
+    
+    for player, num in players.items():
+        wrote.append(f'{player} {num}')
+        event = dict(
+            date=date,
+            username=player,
+            type=type_,
+            num=num
+        )
+        db_helper.add_event_to_game(message.chat_id, event)
 
-@bot.message_handler(commands=['poker_out'])
-def handle_poker_event(message):
-    # TODO: DB
-    pass
+    reply = '\n'.join(wrote)
+    bot.send_message(message.from_user.id, reply)
 
-
-@bot.message_handler(commands=['poker_add', 'poker_minus'])
-def handle_poker_event(message):
-    # TODO: DB
-    pass
 
 @bot.message_handler(commands=['poker_undo'])
-def handle_poker_undo(message):
-    # bot.reply_to(message, message.text)
+def handle_poker_undo(message: Message):
+    event = db_helper.undo_event(message.chat_id)
+    bot.send_message(message.from_user.id, json.dumps(event, indent=4))
+
+
+@bot.message_handler(commands=['poker_clear_events'])
+def handle_poker_clear_events(message: Message):
+    db_helper.poker_clear_events(message.chat_id)
+    bot.send_message(message.from_user.id, strings['cleared_events'])
+
+
+
+@bot.message_handler(commands=['poker_plot'])
+def handle_poker_plot(message: Message):
     pass
 
 
 @bot.message_handler(content_types=['dice'])
-def handle_poker_undo(message):
+def handle_dice(message: Message):
     if message.dice.value == 6:
         bot.send_message(message.chat.id, strings['you_are_lucky'])
 
